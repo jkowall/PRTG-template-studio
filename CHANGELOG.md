@@ -4,8 +4,11 @@
 ### Fixed
 - Fixed theme persistence issue where the app might reset to Dark Mode on reload. Added script to prevent Flash of Unstyled Content (FOUC).
 ### Added
+- **Sidebar Filtering**: Added buttons to filter the file list by "All", "Default" (root), and "Custom" (subdirectories).
+- **Visual Improvements**: 
+    - Replaced text badges with a subtle dot indicator for custom files.
+    - Improved Dark Mode contrast and styling in the separate Visual Preview pane.
 - Helper scripts `run.ps1` and `run.sh` to automatically manage venv and run the app.
-- Visual badges in the file list to distinguish "Custom" (subdirectory) vs "Default" (root) templates.
 - Light/Dark mode toggle (persisted via LocalStorage).
 - Configuration changes: `config.ini` is now git-ignored. `config.example.ini` is provided with default PRTG paths.
 - Auto-reload support for development via `--reload` flag or `PRTG_DEBUG` env var (uses `hupper`).

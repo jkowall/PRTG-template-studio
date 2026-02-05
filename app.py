@@ -117,7 +117,6 @@ def git_history(type_key, filename):
                     })
         return history
     except subprocess.CalledProcessError:
-    except subprocess.CalledProcessError:
         return [] # Return empty if no history or error
 
 def git_get_version(type_key, filename, commit_hash):
@@ -272,7 +271,6 @@ def get_template_history(filename):
     if '..' in filename or filename.startswith('/'):
         return jsonify({"error": "Invalid filename"}), 400
         
-    history = git_history(type_key, filename)
     history = git_history(type_key, filename)
     return jsonify(history)
 

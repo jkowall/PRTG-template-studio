@@ -2,6 +2,8 @@
 
 ## [1.1.0] - 2026-02-05
 ### Fixed
+- Fixed issue where custom files in subdirectories were not accessible on Windows due to path separator handling.
+- Fixed syntax error in `index.html` preventing page load.
 - Fixed theme persistence issue where the app might reset to Dark Mode on reload. Added script to prevent Flash of Unstyled Content (FOUC).
 ### Added
 - **Sidebar Filtering**: Added buttons to filter the file list by "All", "Default" (root), and "Custom" (subdirectories).

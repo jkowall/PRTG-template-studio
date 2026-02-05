@@ -133,13 +133,15 @@ def list_templates():
                     # Store relative path from the base directory
                     full_path = os.path.join(root, f)
                     rel_path = os.path.relpath(full_path, path)
+                    # Normalize to forward slashes for API consistency
+                    rel_path = rel_path.replace(os.sep, '/')
                     files.append(rel_path)
     
     # Sort files for better UX
     files.sort()
     return jsonify(files)
 
-@app.route('/api/template/<filename>', methods=['GET'])
+@app.route('/api/template/<path:filename>', methods=['GET'])
 @auth.login_required
 def get_template(filename):
     type_key = request.args.get('type', 'device')
@@ -164,7 +166,7 @@ def get_template(filename):
         
     return jsonify({"filename": filename, "content": content, "type": type_key})
 
-@app.route('/api/template/<filename>', methods=['POST'])
+@app.route('/api/template/<path:filename>', methods=['POST'])
 @auth.login_required
 def save_template(filename):
     type_key = request.args.get('type', 'device')

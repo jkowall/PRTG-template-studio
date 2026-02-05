@@ -19,7 +19,7 @@ Persistence: File System + Git Versioning.
 
 Single-File Frontend: The frontend MUST remain in templates/index.html. Do not split CSS/JS.
 
-Visual Identity: ALWAYS maintain the Dark Mode aesthetic (Zinc-950 background, Zinc-800 borders). Do not introduce light mode components.
+Visual Identity: Support both Dark and Light modes. Use Tailwind's `dark:` modifier to handle theming. Default to Dark Mode.
 
 Windows Compatibility: Always use os.path.join.
 

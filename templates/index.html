@@ -90,7 +90,7 @@
         const XmlNode = ({ node }) => {
             if (node.nodeType === Node.TEXT_NODE) {
                 const text = node.textContent.trim();
-                return text ? <div class="text-zinc-400 break-words">{text}</div> : null;
+                return text ? <div class="text-zinc-600 dark:text-zinc-400 break-words">{text}</div> : null;
             }
 
             if (node.nodeType === Node.ELEMENT_NODE) {
@@ -116,7 +116,7 @@
                             {tagName}
                             {Array.from(node.attributes).map(attr => (
                                 <span key={attr.name} class="ml-2 font-normal text-zinc-500 lowercase">
-                                    {attr.name}="<span class="text-amber-200/80">{attr.value}</span>"
+                                    {attr.name}="<span class="text-amber-600 dark:text-amber-200/80">{attr.value}</span>"
                                 </span>
                             ))}
                         </div>
@@ -134,8 +134,8 @@
         const Preview = ({ xmlString }) => {
             const xmlDoc = useMemo(() => parseXML(xmlString), [xmlString]);
 
-            if (!xmlString) return <div class="p-8 text-zinc-600 italic text-center">Select a template to view details</div>;
-            if (xmlDoc.error) return <div class="p-4 text-red-500 bg-red-950/20 border border-red-900 rounded m-4">{xmlDoc.error}</div>;
+            if (!xmlString) return <div class="p-8 text-zinc-500 dark:text-zinc-600 italic text-center">Select a template to view details</div>;
+            if (xmlDoc.error) return <div class="p-4 text-red-600 dark:text-red-500 bg-red-100 dark:bg-red-950/20 border border-red-300 dark:border-red-900 rounded m-4">{xmlDoc.error}</div>;
 
             return (
                 <div class="p-4 overflow-auto h-full">
@@ -153,6 +153,20 @@
             const [initialContent, setInitialContent] = useState("");
             const [status, setStatus] = useState("");
             const [loading, setLoading] = useState(false);
+            const [theme, setTheme] = useState(localStorage.getItem('theme') || 'dark');
+
+            useEffect(() => {
+                if (theme === 'dark') {
+                    document.documentElement.classList.add('dark');
+                } else {
+                    document.documentElement.classList.remove('dark');
+                }
+                localStorage.setItem('theme', theme);
+            }, [theme]);
+
+            const toggleTheme = () => {
+                setTheme(prev => prev === 'dark' ? 'light' : 'dark');
+            };
 
             useEffect(() => {
                 fetchTemplates();
@@ -229,8 +243,8 @@
                                         key={type}
                                         onClick={() => setActiveType(type)}
                                         class={`flex-1 py-1 px-2 text-[10px] uppercase font-bold rounded transition-colors ${activeType === type
-                                                ? 'bg-zinc-800 text-zinc-100 shadow-sm'
-                                                : 'text-zinc-500 hover:text-zinc-300'
+                                            ? 'bg-zinc-800 text-zinc-100 shadow-sm'
+                                            : 'text-zinc-500 hover:text-zinc-300'
                                             }`}
                                     >
                                         {type}
@@ -245,8 +259,8 @@
                                     key={file}
                                     onClick={() => loadTemplate(file)}
                                     class={`w-full text-left px-3 py-2 rounded text-xs font-medium transition-colors ${selectedFile === file
-                                            ? 'bg-blue-600/10 text-blue-400 border border-blue-600/20'
-                                            : 'hover:bg-zinc-800 text-zinc-400'
+                                        ? 'bg-blue-600/10 text-blue-400 border border-blue-600/20'
+                                        : 'hover:bg-zinc-800 text-zinc-400'
                                         }`}
                                 >
                                     {file}
@@ -269,8 +283,8 @@
                                     onClick={saveTemplate}
                                     disabled={!isDirty || loading}
                                     class={`px-4 py-1.5 rounded text-xs font-semibold transition-all ${isDirty
-                                            ? 'bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-900/20'
-                                            : 'bg-zinc-800 text-zinc-500 cursor-not-allowed'
+                                        ? 'bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-900/20'
+                                        : 'bg-zinc-800 text-zinc-500 cursor-not-allowed'
                                         }`}
                                 >
                                     {loading ? 'Saving...' : 'Save Changes'}

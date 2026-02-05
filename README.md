@@ -5,6 +5,7 @@ A modern, dark-mode web application for managing PRTG Network Monitor Device Tem
 ## Features
 
 - **Multi-Template Support**: Manage Device Templates (`.odt`), SNMP Libraries (`.oidlib`, `.xml`), and Lookups (`.ovl`, `.xml`) from a single interface.
+- **Theme Support**: Toggle between Dark and Light modes.
 - **Visual Preview**: View the XML structure of your templates in a readable, nested format.
 - **Git Versioning**: Automatically commits changes to a local Git repository on every save.
 - **Dark Mode**: A premium, "shadcn/ui"-inspired dark theme using Tailwind CSS.

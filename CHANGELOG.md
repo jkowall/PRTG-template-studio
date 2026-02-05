@@ -2,6 +2,7 @@
 
 ## [1.1.0] - 2026-02-05
 ### Added
+- Helper scripts `run.ps1` and `run.sh` to automatically manage venv and run the app.
 - Visual badges in the file list to distinguish "Custom" (subdirectory) vs "Default" (root) templates.
 - Light/Dark mode toggle (persisted via LocalStorage).
 - Configuration changes: `config.ini` is now git-ignored. `config.example.ini` is provided with default PRTG paths.

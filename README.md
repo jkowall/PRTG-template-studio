@@ -40,11 +40,30 @@ Default values point to standard PRTG installation paths:
 
 ### 3. Run Application
 
-```powershell
-python app.py
+**Using Helper Scripts (Recommended):**
+These scripts automatically create the virtual environment and install dependencies if needed.
 
-# For Development (Auto-Reload)
-python app.py --reload
+```powershell
+# Windows
+.\run.ps1
+
+# Windows (Auto-Reload for dev)
+.\run.ps1 --reload
+```
+
+```bash
+# Linux / macOS
+./run.sh
+
+# Linux / macOS (Auto-Reload for dev)
+./run.sh --reload
+```
+
+**Manual Method:**
+```powershell
+# Windows
+.\venv\Scripts\activate
+python app.py
 ```
 
 Access the application at: [http://localhost:8080](http://localhost:8080)

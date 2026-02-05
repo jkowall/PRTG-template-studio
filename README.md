@@ -1,53 +1,70 @@
-Development & Best Practices
+# PRTG Template Studio
 
-1. Environment Setup
+A modern, dark-mode web application for managing PRTG Network Monitor Device Templates (`.odt` files) directly on your Core Server.
 
-PRTG Template Studio uses a Python backend and a React frontend embedded in a single HTML file to simplify Windows deployment.
+## Features
 
-# Setup Venv
+- **Visual Preview**: View the XML structure of your templates in a readable, nested format.
+- **Git Versioning**: Automatically commits changes to a local Git repository on every save.
+- **Dark Mode**: A premium, "shadcn/ui"-inspired dark theme using Tailwind CSS.
+- **Secure**: Protected by HTTP Basic Authentication.
+
+## Quick Start Configuration
+
+### 1. Set up Environment
+
+Run the following commands in PowerShell to create a virtual environment and install dependencies:
+
+```powershell
+# Create Virtual Environment
 python -m venv venv
-.\venv\Scripts\activate
 
-# Install Deps
+# Activate Virtual Environment
+.\venv\Scripts\Activate
+
+# Install Dependencies
 pip install -r requirements.txt
-pip install pytest flake8 black
+```
 
+### 2. Configure Settings (Optional)
 
-2. Design Guidelines (UI)
+The first run will generate a `config.ini` file. You can pre-configure it or edit it later:
 
-We strictly adhere to a Modern Dark Mode design system.
+```ini
+[Server]
+Host = 0.0.0.0
+Port = 8080
 
-Palette: Tailwind's Zinc colors.
+[PRTG]
+# Update this to your real PRTG templates directory
+TemplatePath = ./devicetemplates
 
-Backgrounds: bg-zinc-950 (Main), bg-zinc-900 (Cards/Sidebar).
+[Security]
+# CHANGE THESE FOR PRODUCTION
+Username = admin
+Password = changeme
+```
 
-Borders: border-zinc-800.
+### 3. Run Application
 
-Text: text-zinc-100 (Primary), text-zinc-400 (Secondary).
+```powershell
+python app.py
+```
 
-Accents: blue-600 for primary actions.
+Access the application at: [http://localhost:8080](http://localhost:8080)
 
-Typography: Sans-serif (Inter or system default).
+## Development
 
-Spacing: Use ample padding (p-4, p-6) to avoid clutter.
+### Running Tests
 
-3. Testing & Linting
+```powershell
+# Install test dependencies (if not in requirements.txt)
+pip install pytest
 
-Backend
-
-Run pytest to verify API endpoints and XML validation logic.
-
+# Run tests
 pytest
+```
 
+## License
 
-Git Workflow
-
-Since the application itself performs Git operations on the server:
-
-Do not develop inside the live PRTG directory.
-
-Use a mock directory or tempfile in your tests (as seen in tests/conftest.py).
-
-4. CI/CD
-
-See .github/workflows/ci.yml for the automated testing pipeline.
+Private / Internal Use

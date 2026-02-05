@@ -184,8 +184,14 @@ def save_template(filename):
         return jsonify({"error": str(e)}), 500
 
 # --- Main ---
-if __name__ == "__main__":
+def main():
     ensure_directory_structure()
     ensure_git_repo()
     print(f"Starting server on http://{HOST}:{PORT}")
     serve(app, host=HOST, port=PORT)
+
+if __name__ == "__main__":
+    if '--reload' in sys.argv or os.environ.get('PRTG_DEBUG'):
+        import hupper
+        hupper.start_reloader('app.main')
+    main()

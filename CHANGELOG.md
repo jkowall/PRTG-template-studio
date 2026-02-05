@@ -2,6 +2,7 @@
 
 ## [1.1.0] - 2026-02-05
 ### Added
+- Auto-reload support for development via `--reload` flag or `PRTG_DEBUG` env var (uses `hupper`).
 - Type selector for switching between Device Templates, SNMP Libraries, and Lookups.
 - Configuration for multiple template paths in `config.ini`.
 - Single-page interface updates to support multi-template management.

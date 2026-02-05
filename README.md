@@ -50,6 +50,9 @@ Password = changeme
 
 ```powershell
 python app.py
+
+# For Development (Auto-Reload)
+python app.py --reload
 ```
 
 Access the application at: [http://localhost:8080](http://localhost:8080)

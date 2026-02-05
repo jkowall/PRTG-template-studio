@@ -153,8 +153,7 @@
             );
         };
 
-            );
-        };
+
 
         const HistoryModal = ({ isOpen, onClose, history, filename }) => {
             if (!isOpen) return null;
@@ -451,6 +450,15 @@
                         </div>
                     </div>
                 </div>
+                </div >
+
+            <HistoryModal
+                isOpen={showHistory}
+                onClose={() => setShowHistory(false)}
+                history={history}
+                filename={selectedFile}
+            />
+            </div >
             );
         };
 

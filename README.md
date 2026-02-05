@@ -29,22 +29,13 @@ pip install -r requirements.txt
 
 ### 2. Configure Settings (Optional)
 
-The first run will generate a `config.ini` file. You can pre-configure it or edit it later:
+The first run will generate a `config.ini` file from `config.example.ini`. 
+**Note:** `config.ini` is git-ignored to prevent committing secrets.
 
-```ini
-[Server]
-Host = 0.0.0.0
-Port = 8080
-
-[PRTG]
-# Update this to your real PRTG templates directory
-TemplatePath = ./devicetemplates
-
-[Security]
-# CHANGE THESE FOR PRODUCTION
-Username = admin
-Password = changeme
-```
+Default values point to standard PRTG installation paths:
+- Device Templates: `C:\Program Files (x86)\PRTG Network Monitor\devicetemplates`
+- SNMP Libraries: `C:\Program Files (x86)\PRTG Network Monitor\snmplibs`
+- Lookups: `C:\Program Files (x86)\PRTG Network Monitor\lookups`
 
 ### 3. Run Application
 

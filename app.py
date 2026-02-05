@@ -1,5 +1,6 @@
 import os
 import sys
+import shutil
 import subprocess
 import configparser
 from flask import Flask, request, jsonify, render_template, send_from_directory
@@ -12,14 +13,20 @@ CONFIG_FILE = 'config.ini'
 def load_config():
     config = configparser.ConfigParser()
     if not os.path.exists(CONFIG_FILE):
-        print(f"[{CONFIG_FILE}] not found. Generating default...")
-        config['Server'] = {'Host': '0.0.0.0', 'Port': '8080'}
-        config['PRTG'] = {'TemplatePath': './devicetemplates'}
-        config['SNMP'] = {'LibraryPath': './snmplibs'}
-        config['Lookups'] = {'LookupPath': './lookups'}
-        config['Security'] = {'Username': 'admin', 'Password': 'changeme'}
-        with open(CONFIG_FILE, 'w') as f:
-            config.write(f)
+        print(f"[{CONFIG_FILE}] not found. ", end="")
+        if os.path.exists('config.example.ini'):
+            print("Generating from config.example.ini...")
+            shutil.copy('config.example.ini', CONFIG_FILE)
+            config.read(CONFIG_FILE)
+        else:
+            print("Generating default...")
+            config['Server'] = {'Host': '0.0.0.0', 'Port': '8080'}
+            config['PRTG'] = {'TemplatePath': r'C:\Program Files (x86)\PRTG Network Monitor\devicetemplates'}
+            config['SNMP'] = {'LibraryPath': r'C:\Program Files (x86)\PRTG Network Monitor\snmplibs'}
+            config['Lookups'] = {'LookupPath': r'C:\Program Files (x86)\PRTG Network Monitor\lookups'}
+            config['Security'] = {'Username': 'admin', 'Password': 'changeme'}
+            with open(CONFIG_FILE, 'w') as f:
+                config.write(f)
     else:
         config.read(CONFIG_FILE)
     return config

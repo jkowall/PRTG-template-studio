@@ -92,6 +92,31 @@ def git_commit(type_key, filename, message):
     except subprocess.CalledProcessError as e:
         return False, f"Git error: {e}"
 
+def git_history(type_key, filename):
+    if type_key not in DIRECTORIES:
+        return []
+    path = DIRECTORIES[type_key]['path']
+    try:
+        # Format: Hash|Author|Date|Message
+        # %H: Commit hash, %an: Author name, %ad: Author date (iso-strict), %s: Subject
+        cmd = ['git', 'log', '--pretty=format:%H|%an|%ad|%s', '--date=iso-strict', '-n', '20', filename]
+        result = subprocess.run(cmd, cwd=path, capture_output=True, text=True, check=True)
+        
+        history = []
+        if result.stdout:
+            for line in result.stdout.splitlines():
+                parts = line.split('|', 3)
+                if len(parts) == 4:
+                    history.append({
+                        'hash': parts[0],
+                        'author': parts[1],
+                        'date': parts[2],
+                        'message': parts[3]
+                    })
+        return history
+    except subprocess.CalledProcessError:
+        return [] # Return empty if no history or error
+
 # --- Flask App ---
 app = Flask(__name__)
 auth = HTTPBasicAuth()
@@ -203,6 +228,22 @@ def save_template(filename):
             
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/template/<path:filename>/history', methods=['GET'])
+@auth.login_required
+def get_template_history(filename):
+    type_key = request.args.get('type', 'device')
+    if type_key not in DIRECTORIES:
+        return jsonify({"error": "Invalid type"}), 400
+
+    if '..' in filename or filename.startswith('/'):
+        return jsonify({"error": "Invalid filename"}), 400
+        
+    history = git_history(type_key, filename)
+    return jsonify(history)
 
 # --- Main ---
 def main():

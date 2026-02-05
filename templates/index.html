@@ -153,6 +153,65 @@
             );
         };
 
+            );
+        };
+
+        const HistoryModal = ({ isOpen, onClose, history, filename }) => {
+            if (!isOpen) return null;
+
+            return (
+                <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+                    <div class="bg-white dark:bg-zinc-900 rounded-lg shadow-xl w-full max-w-2xl border border-zinc-200 dark:border-zinc-800 flex flex-col max-h-[80vh]">
+                        <div class="flex items-center justify-between p-4 border-b border-zinc-200 dark:border-zinc-800">
+                            <h3 class="font-bold text-lg text-zinc-900 dark:text-zinc-100">History: {filename}</h3>
+                            <button onClick={onClose} class="text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300">
+                                ✕
+                            </button>
+                        </div>
+                        <div class="overflow-y-auto p-0 flex-1">
+                            {history.length === 0 ? (
+                                <div class="p-8 text-center text-zinc-500 italic">No history found for this file.</div>
+                            ) : (
+                                <table class="w-full text-left text-xs">
+                                    <thead class="bg-zinc-50 dark:bg-zinc-950/50 text-zinc-500 font-semibold uppercase sticky top-0">
+                                        <tr>
+                                            <th class="px-4 py-2 border-b border-zinc-100 dark:border-zinc-800">Date</th>
+                                            <th class="px-4 py-2 border-b border-zinc-100 dark:border-zinc-800">Author</th>
+                                            <th class="px-4 py-2 border-b border-zinc-100 dark:border-zinc-800">Message</th>
+                                            <th class="px-4 py-2 border-b border-zinc-100 dark:border-zinc-800">Commit</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-zinc-100 dark:divide-zinc-800">
+                                        {history.map((commit) => (
+                                            <tr key={commit.hash} class="hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors">
+                                                <td class="px-4 py-3 text-zinc-600 dark:text-zinc-400 whitespace-nowrap">
+                                                    {new Date(commit.date).toLocaleString()}
+                                                </td>
+                                                <td class="px-4 py-3 text-zinc-800 dark:text-zinc-300 font-medium">
+                                                    {commit.author}
+                                                </td>
+                                                <td class="px-4 py-3 text-zinc-600 dark:text-zinc-400">
+                                                    {commit.message}
+                                                </td>
+                                                <td class="px-4 py-3 font-mono text-zinc-400 text-[10px]">
+                                                    {commit.hash.substring(0, 7)}
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            )}
+                        </div>
+                        <div class="p-4 border-t border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/50 rounded-b-lg flex justify-end">
+                            <button onClick={onClose} class="px-4 py-2 bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 rounded text-xs font-semibold">
+                                Close
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
         // --- Main App Component ---
         const App = () => {
             const [templates, setTemplates] = useState([]);
@@ -163,6 +222,8 @@
             const [status, setStatus] = useState("");
             const [loading, setLoading] = useState(false);
             const [filter, setFilter] = useState('all'); // all, default, custom
+            const [history, setHistory] = useState([]);
+            const [showHistory, setShowHistory] = useState(false);
 
             // Initialize theme from localStorage or default to dark
             const [theme, setTheme] = useState(() => {
@@ -240,6 +301,20 @@
                     }
                 } catch (e) {
                     setStatus(`Error: ${e.message}`);
+                }
+            };
+
+            const loadHistory = async () => {
+                if (!selectedFile) return;
+                try {
+                    const res = await fetch(`/api/template/${selectedFile}/history?type=${activeType}`);
+                    if (res.ok) {
+                        const data = await res.json();
+                        setHistory(data);
+                        setShowHistory(true);
+                    }
+                } catch (e) {
+                    console.error("Failed to load history", e);
                 }
             };
 

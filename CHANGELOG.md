@@ -2,6 +2,7 @@
 
 ## [1.1.0] - 2026-02-05
 ### Added
+- Visual badges in the file list to distinguish "Custom" (subdirectory) vs "Default" (root) templates.
 - Light/Dark mode toggle (persisted via LocalStorage).
 - Configuration changes: `config.ini` is now git-ignored. `config.example.ini` is provided with default PRTG paths.
 - Auto-reload support for development via `--reload` flag or `PRTG_DEBUG` env var (uses `hupper`).

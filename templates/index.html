@@ -239,8 +239,8 @@
                                         key={type}
                                         onClick={() => setActiveType(type)}
                                         class={`flex-1 py-1 px-2 text-[10px] uppercase font-bold rounded transition-colors ${activeType === type
-                                                ? 'bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 shadow-sm'
-                                                : 'text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300'
+                                            ? 'bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 shadow-sm'
+                                            : 'text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300'
                                             }`}
                                     >
                                         {type}
@@ -250,18 +250,30 @@
                         </div>
                         <div class="flex-1 overflow-y-auto p-2 space-y-1">
                             {templates.length === 0 && <div class="text-xs text-zinc-500 dark:text-zinc-600 p-2 text-center italic">No {activeType} files found</div>}
-                            {templates.map(file => (
-                                <button
-                                    key={file}
-                                    onClick={() => loadTemplate(file)}
-                                    class={`w-full text-left px-3 py-2 rounded text-xs font-medium transition-colors ${selectedFile === file
-                                            ? 'bg-blue-100 dark:bg-blue-600/10 text-blue-700 dark:text-blue-400 border border-blue-200 dark:border-blue-600/20'
-                                            : 'hover:bg-zinc-200 dark:hover:bg-zinc-800 text-zinc-600 dark:text-zinc-400'
-                                        }`}
-                                >
-                                    {file}
-                                </button>
-                            ))}
+                            {templates.map(file => {
+                                const isCustom = file.includes('/') || file.includes('\\');
+                                return (
+                                    <button
+                                        key={file}
+                                        onClick={() => loadTemplate(file)}
+                                        class={`w-full text-left px-3 py-2 rounded text-xs font-medium transition-colors flex items-center justify-between group ${selectedFile === file
+                                                ? 'bg-blue-100 dark:bg-blue-600/10 text-blue-700 dark:text-blue-400 border border-blue-200 dark:border-blue-600/20'
+                                                : 'hover:bg-zinc-200 dark:hover:bg-zinc-800 text-zinc-600 dark:text-zinc-400'
+                                            }`}
+                                    >
+                                        <span class="truncate mr-2" title={file}>{file}</span>
+                                        {isCustom ? (
+                                            <span class="flex-shrink-0 px-1.5 py-0.5 rounded-[3px] bg-indigo-100 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-300 text-[9px] font-bold uppercase tracking-wider border border-indigo-200 dark:border-indigo-500/30">
+                                                Custom
+                                            </span>
+                                        ) : (
+                                            <span class="flex-shrink-0 px-1.5 py-0.5 rounded-[3px] bg-zinc-200 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-500 text-[9px] font-bold uppercase tracking-wider opacity-0 group-hover:opacity-100 transition-opacity">
+                                                Default
+                                            </span>
+                                        )}
+                                    </button>
+                                );
+                            })}
                         </div>
                     </div>
 
@@ -279,8 +291,8 @@
                                     onClick={saveTemplate}
                                     disabled={!isDirty || loading}
                                     class={`px-4 py-1.5 rounded text-xs font-semibold transition-all ${isDirty
-                                            ? 'bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-900/20'
-                                            : 'bg-zinc-200 dark:bg-zinc-800 text-zinc-400 dark:text-zinc-500 cursor-not-allowed'
+                                        ? 'bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-900/20'
+                                        : 'bg-zinc-200 dark:bg-zinc-800 text-zinc-400 dark:text-zinc-500 cursor-not-allowed'
                                         }`}
                                 >
                                     {loading ? 'Saving...' : 'Save Changes'}

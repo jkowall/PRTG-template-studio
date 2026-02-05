@@ -145,8 +145,9 @@ def git_get_diff(type_key, filename, commit_hash):
         # Standardize on forward slashes for git
         filename = filename.replace('\\', '/')
         # git show --format= -p <hash> -- <filename>
-        # git show --format= -p <hash> -- <filename>
-        cmd = ['git', 'show', '--format=', '-p', commit_hash, '--', filename]
+        # Add --text (treat as text), --no-textconv (skip filters), --no-ext-diff (skip external tools)
+        # to avoid "unsupported filetype" errors from system-wide .odt handlers
+        cmd = ['git', 'show', '--format=', '-p', '--text', '--no-textconv', '--no-ext-diff', commit_hash, '--', filename]
         result = subprocess.run(cmd, cwd=path, capture_output=True, text=True, check=True, encoding='utf-8', errors='replace')
         return result.stdout
     except subprocess.CalledProcessError as e:

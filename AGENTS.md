@@ -44,3 +44,7 @@ Security: Basic Auth is non-negotiable.
 Run: python app.py
 
 Test: pytest
+
+5. Documentation Rules
+- ALWAYS update CHANGELOG.md for every feature or fix.
+- ALWAYS update README.md if usage, config, or features change.

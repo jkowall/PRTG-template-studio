@@ -3,11 +3,12 @@ import sys
 import shutil
 import subprocess
 import configparser
-from flask import Flask, request, jsonify, render_template, send_from_directory
+from flask import Flask, request, jsonify, render_template
 from flask_httpauth import HTTPBasicAuth
 from waitress import serve
 
 # --- Configuration ---
+__version__ = "1.1.0"
 CONFIG_FILE = 'config.ini'
 
 def load_config():

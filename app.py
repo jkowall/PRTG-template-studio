@@ -15,6 +15,8 @@ def load_config():
         print(f"[{CONFIG_FILE}] not found. Generating default...")
         config['Server'] = {'Host': '0.0.0.0', 'Port': '8080'}
         config['PRTG'] = {'TemplatePath': './devicetemplates'}
+        config['SNMP'] = {'LibraryPath': './snmplibs'}
+        config['Lookups'] = {'LookupPath': './lookups'}
         config['Security'] = {'Username': 'admin', 'Password': 'changeme'}
         with open(CONFIG_FILE, 'w') as f:
             config.write(f)
@@ -26,37 +28,59 @@ config = load_config()
 
 HOST = config.get('Server', 'Host', fallback='0.0.0.0')
 PORT = config.getint('Server', 'Port', fallback=8080)
-TEMPLATE_PATH = config.get('PRTG', 'TemplatePath', fallback='./devicetemplates')
 AUTH_USER = config.get('Security', 'Username', fallback='admin')
 AUTH_PASS = config.get('Security', 'Password', fallback='changeme')
+
+# Allow configuring which types map to which paths and allowed extensions
+DIRECTORIES = {
+    'device': {
+        'path': config.get('PRTG', 'TemplatePath', fallback='./devicetemplates'),
+        'extensions': ('.odt',)
+    },
+    'snmp': {
+        'path': config.get('SNMP', 'LibraryPath', fallback='./snmplibs'),
+        'extensions': ('.oidlib', '.xml')
+    },
+    'lookup': {
+        'path': config.get('Lookups', 'LookupPath', fallback='./lookups'),
+        'extensions': ('.ovl', '.xml')
+    }
+}
 
 # --- Helper Functions ---
 
 def ensure_directory_structure():
-    if not os.path.exists(TEMPLATE_PATH):
-        try:
-            os.makedirs(TEMPLATE_PATH)
-            print(f"Created template directory: {TEMPLATE_PATH}")
-        except OSError as e:
-            print(f"Error creating directory {TEMPLATE_PATH}: {e}")
-            sys.exit(1)
+    for key, info in DIRECTORIES.items():
+        path = info['path']
+        if not os.path.exists(path):
+            try:
+                os.makedirs(path)
+                print(f"Created {key} directory: {path}")
+            except OSError as e:
+                print(f"Error creating directory {path}: {e}")
+                sys.exit(1)
 
 def ensure_git_repo():
-    git_dir = os.path.join(TEMPLATE_PATH, '.git')
-    if not os.path.exists(git_dir):
-        print("Initializing Git repository...")
-        try:
-            subprocess.run(['git', 'init'], cwd=TEMPLATE_PATH, check=True)
-            # Configure git locally for this repo if needed, but assuming user git config exists or we set local
-            subprocess.run(['git', 'config', 'user.email', 'prtg-studio@local'], cwd=TEMPLATE_PATH, check=False)
-            subprocess.run(['git', 'config', 'user.name', 'PRTG Studio'], cwd=TEMPLATE_PATH, check=False)
-        except subprocess.CalledProcessError as e:
-            print(f"Failed to init git repo: {e}")
+    for key, info in DIRECTORIES.items():
+        path = info['path']
+        git_dir = os.path.join(path, '.git')
+        if not os.path.exists(git_dir):
+            print(f"Initializing Git repository for {key}...")
+            try:
+                subprocess.run(['git', 'init'], cwd=path, check=True)
+                # Configure git locally for this repo if needed
+                subprocess.run(['git', 'config', 'user.email', 'prtg-studio@local'], cwd=path, check=False)
+                subprocess.run(['git', 'config', 'user.name', 'PRTG Studio'], cwd=path, check=False)
+            except subprocess.CalledProcessError as e:
+                print(f"Failed to init git repo in {path}: {e}")
 
-def git_commit(filename, message):
+def git_commit(type_key, filename, message):
+    if type_key not in DIRECTORIES:
+        return False, "Invalid type"
+    path = DIRECTORIES[type_key]['path']
     try:
-        subprocess.run(['git', 'add', filename], cwd=TEMPLATE_PATH, check=True)
-        subprocess.run(['git', 'commit', '-S', '-m', message], cwd=TEMPLATE_PATH, check=True)
+        subprocess.run(['git', 'add', filename], cwd=path, check=True)
+        subprocess.run(['git', 'commit', '-S', '-m', message], cwd=path, check=True)
         return True, "Saved and committed."
     except subprocess.CalledProcessError as e:
         return False, f"Git error: {e}"
@@ -81,31 +105,53 @@ def index():
 @app.route('/api/templates', methods=['GET'])
 @auth.login_required
 def list_templates():
+    type_key = request.args.get('type', 'device')
+    if type_key not in DIRECTORIES:
+        return jsonify({"error": "Invalid type"}), 400
+    
+    info = DIRECTORIES[type_key]
+    path = info['path']
+    exts = info['extensions']
+
     files = []
-    if os.path.exists(TEMPLATE_PATH):
-        for f in os.listdir(TEMPLATE_PATH):
-            if f.endswith('.odt') and os.path.isfile(os.path.join(TEMPLATE_PATH, f)):
+    if os.path.exists(path):
+        for f in os.listdir(path):
+            if f.lower().endswith(exts) and os.path.isfile(os.path.join(path, f)):
                 files.append(f)
     return jsonify(files)
 
 @app.route('/api/template/<filename>', methods=['GET'])
 @auth.login_required
 def get_template(filename):
+    type_key = request.args.get('type', 'device')
+    if type_key not in DIRECTORIES:
+        return jsonify({"error": "Invalid type"}), 400
+
     # Security check: prevent directory traversal
     if '..' in filename or filename.startswith('/'):
         return jsonify({"error": "Invalid filename"}), 400
     
-    filepath = os.path.join(TEMPLATE_PATH, filename)
+    path = DIRECTORIES[type_key]['path']
+    filepath = os.path.join(path, filename)
+    
     if not os.path.exists(filepath):
         return jsonify({"error": "File not found"}), 404
     
-    with open(filepath, 'r', encoding='utf-8') as f:
-        content = f.read()
-    return jsonify({"filename": filename, "content": content})
+    try:
+        with open(filepath, 'r', encoding='utf-8') as f:
+            content = f.read()
+    except UnicodeDecodeError:
+        return jsonify({"error": "Binary or invalid encoding"}), 400
+        
+    return jsonify({"filename": filename, "content": content, "type": type_key})
 
 @app.route('/api/template/<filename>', methods=['POST'])
 @auth.login_required
 def save_template(filename):
+    type_key = request.args.get('type', 'device')
+    if type_key not in DIRECTORIES:
+        return jsonify({"error": "Invalid type"}), 400
+
     if '..' in filename or filename.startswith('/'):
         return jsonify({"error": "Invalid filename"}), 400
 
@@ -114,17 +160,21 @@ def save_template(filename):
     if content is None:
         return jsonify({"error": "No content provided"}), 400
 
-    # Basic XML validation could go here, but relying on frontend for now or simple check
-    if not content.strip().startswith('<'): # Very basic check
-         pass # Allow saving even if broken XML? Maybe warning. For now let it pass.
+    # Basic XML validation could go here.
+    # We might want looser validation for non-XML OIDLIBS if those exist, 
+    # but standards say .oidlib is mostly XML or JSON? 
+    # Actually PRTG OIDLIBs are XML. OVLs are XML. So XML check is still decent valid sanity check.
+    if content.strip() and not content.strip().startswith('<') and not content.strip().startswith('{'): 
+         pass # Allow saving
 
-    filepath = os.path.join(TEMPLATE_PATH, filename)
+    path = DIRECTORIES[type_key]['path']
+    filepath = os.path.join(path, filename)
     
     try:
         with open(filepath, 'w', encoding='utf-8') as f:
             f.write(content)
         
-        success, msg = git_commit(filename, f"Update {filename} via PRTG Studio")
+        success, msg = git_commit(type_key, filename, f"Update {filename} via PRTG Studio")
         if success:
             return jsonify({"message": msg})
         else:

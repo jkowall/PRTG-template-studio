@@ -1,10 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PRTG Template Studio</title>
-    
+
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -27,34 +28,43 @@
     </script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
-        
+
         body {
-            background-color: #09090b; /* zinc-950 */
-            color: #f4f4f5; /* zinc-100 */
+            background-color: #09090b;
+            /* zinc-950 */
+            color: #f4f4f5;
+            /* zinc-100 */
         }
-        
+
         /* Custom scrollbar for webkit */
         ::-webkit-scrollbar {
             width: 8px;
             height: 8px;
         }
+
         ::-webkit-scrollbar-track {
-            background: #18181b; /* zinc-900 */
+            background: #18181b;
+            /* zinc-900 */
         }
+
         ::-webkit-scrollbar-thumb {
-            background: #3f3f46; /* zinc-700 */
+            background: #3f3f46;
+            /* zinc-700 */
             border-radius: 4px;
         }
+
         ::-webkit-scrollbar-thumb:hover {
-            background: #52525b; /* zinc-600 */
+            background: #52525b;
+            /* zinc-600 */
         }
     </style>
-    
+
     <!-- React & Babel -->
     <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 </head>
+
 <body class="h-screen overflow-hidden flex flex-col font-sans text-sm">
 
     <div id="root" class="h-full w-full"></div>
@@ -91,7 +101,7 @@
                 // Style based on tag name
                 let borderColor = "border-zinc-700";
                 let titleColor = "text-zinc-300";
-                
+
                 if (tagName.toLowerCase() === 'create') {
                     borderColor = "border-green-800/50";
                     titleColor = "text-green-400";
@@ -138,6 +148,7 @@
         const App = () => {
             const [templates, setTemplates] = useState([]);
             const [selectedFile, setSelectedFile] = useState(null);
+            const [activeType, setActiveType] = useState('device'); // device, snmp, lookup
             const [content, setContent] = useState("");
             const [initialContent, setInitialContent] = useState("");
             const [status, setStatus] = useState("");
@@ -145,11 +156,14 @@
 
             useEffect(() => {
                 fetchTemplates();
-            }, []);
+                setSelectedFile(null);
+                setContent("");
+                setInitialContent("");
+            }, [activeType]);
 
             const fetchTemplates = async () => {
                 try {
-                    const res = await fetch('/api/templates');
+                    const res = await fetch(`/api/templates?type=${activeType}`);
                     if (res.ok) {
                         const data = await res.json();
                         setTemplates(data);
@@ -161,10 +175,10 @@
 
             const loadTemplate = async (filename) => {
                 if (content !== initialContent && !confirm("Unsaved changes! Discard?")) return;
-                
+
                 setLoading(true);
                 try {
-                    const res = await fetch(`/api/template/${filename}`);
+                    const res = await fetch(`/api/template/${filename}?type=${activeType}`);
                     if (res.ok) {
                         const data = await res.json();
                         setSelectedFile(filename);
@@ -183,7 +197,7 @@
                 if (!selectedFile) return;
                 setStatus("Saving...");
                 try {
-                    const res = await fetch(`/api/template/${selectedFile}`, {
+                    const res = await fetch(`/api/template/${selectedFile}?type=${activeType}`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ content })
@@ -204,23 +218,36 @@
 
             return (
                 <div class="flex h-screen w-full bg-zinc-950 text-zinc-200">
-                    
+
                     {/* Sidebar */}
                     <div class="w-64 flex-shrink-0 border-r border-zinc-800 bg-zinc-900 flex flex-col">
                         <div class="p-4 border-b border-zinc-800">
-                            <h1 class="font-bold text-zinc-100 tracking-tight">PRTG Studio</h1>
-                            <p class="text-xs text-zinc-500 mt-1">Template Manager</p>
+                            <h1 class="font-bold text-zinc-100 tracking-tight mb-3">PRTG Studio</h1>
+                            <div class="flex bg-zinc-950 rounded p-1 gap-1">
+                                {['device', 'snmp', 'lookup'].map(type => (
+                                    <button
+                                        key={type}
+                                        onClick={() => setActiveType(type)}
+                                        class={`flex-1 py-1 px-2 text-[10px] uppercase font-bold rounded transition-colors ${activeType === type
+                                                ? 'bg-zinc-800 text-zinc-100 shadow-sm'
+                                                : 'text-zinc-500 hover:text-zinc-300'
+                                            }`}
+                                    >
+                                        {type}
+                                    </button>
+                                ))}
+                            </div>
                         </div>
                         <div class="flex-1 overflow-y-auto p-2 space-y-1">
+                            {templates.length === 0 && <div class="text-xs text-zinc-600 p-2 text-center italic">No {activeType} files found</div>}
                             {templates.map(file => (
                                 <button
                                     key={file}
                                     onClick={() => loadTemplate(file)}
-                                    class={`w-full text-left px-3 py-2 rounded text-xs font-medium transition-colors ${
-                                        selectedFile === file 
-                                            ? 'bg-blue-600/10 text-blue-400 border border-blue-600/20' 
+                                    class={`w-full text-left px-3 py-2 rounded text-xs font-medium transition-colors ${selectedFile === file
+                                            ? 'bg-blue-600/10 text-blue-400 border border-blue-600/20'
                                             : 'hover:bg-zinc-800 text-zinc-400'
-                                    }`}
+                                        }`}
                                 >
                                     {file}
                                 </button>
@@ -238,14 +265,13 @@
                             </div>
                             <div class="flex items-center gap-4">
                                 <span class="text-xs text-zinc-500">{status}</span>
-                                <button 
+                                <button
                                     onClick={saveTemplate}
                                     disabled={!isDirty || loading}
-                                    class={`px-4 py-1.5 rounded text-xs font-semibold transition-all ${
-                                        isDirty 
-                                            ? 'bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-900/20' 
+                                    class={`px-4 py-1.5 rounded text-xs font-semibold transition-all ${isDirty
+                                            ? 'bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-900/20'
                                             : 'bg-zinc-800 text-zinc-500 cursor-not-allowed'
-                                    }`}
+                                        }`}
                                 >
                                     {loading ? 'Saving...' : 'Save Changes'}
                                 </button>
@@ -257,7 +283,7 @@
                             {/* Editor */}
                             <div class="w-1/2 flex flex-col border-r border-zinc-800">
                                 <div class="bg-zinc-950 px-4 py-2 text-xs font-semibold text-zinc-500 uppercase tracking-wider border-b border-zinc-800">XML Source</div>
-                                <textarea 
+                                <textarea
                                     class="flex-1 w-full h-full bg-zinc-950 p-4 font-mono text-sm leading-relaxed text-zinc-300 focus:outline-none resize-none"
                                     spellCheck="false"
                                     value={content}
@@ -265,7 +291,7 @@
                                     placeholder="Select a template..."
                                 />
                             </div>
-                            
+
                             {/* Preview */}
                             <div class="w-1/2 flex flex-col bg-zinc-925/30">
                                 <div class="bg-zinc-950 px-4 py-2 text-xs font-semibold text-zinc-500 uppercase tracking-wider border-b border-zinc-800">Visual Structure</div>
@@ -283,4 +309,5 @@
         root.render(<App />);
     </script>
 </body>
+
 </html>

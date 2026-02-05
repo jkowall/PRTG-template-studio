@@ -41,3 +41,16 @@ def test_api_list_templates(client):
     rv = client.get('/api/templates', headers=headers)
     assert rv.status_code == 200
     assert isinstance(rv.json, list)
+
+def test_api_list_templates_snmp(client):
+    from app import AUTH_USER, AUTH_PASS
+    headers = get_auth_headers(AUTH_USER, AUTH_PASS)
+    rv = client.get('/api/templates?type=snmp', headers=headers)
+    assert rv.status_code == 200
+    assert isinstance(rv.json, list)
+
+def test_api_list_templates_invalid_type(client):
+    from app import AUTH_USER, AUTH_PASS
+    headers = get_auth_headers(AUTH_USER, AUTH_PASS)
+    rv = client.get('/api/templates?type=invalid', headers=headers)
+    assert rv.status_code == 400

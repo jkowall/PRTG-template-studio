@@ -449,15 +449,14 @@
                             </div>
                         </div>
                     </div>
+
+                    <HistoryModal
+                        isOpen={showHistory}
+                        onClose={() => setShowHistory(false)}
+                        history={history}
+                        filename={selectedFile}
+                    />
                 </div>
-                
-                <HistoryModal 
-                    isOpen={showHistory} 
-                    onClose={() => setShowHistory(false)} 
-                    history={history} 
-                    filename={selectedFile} 
-                />
-            </div >
             );
         };
 

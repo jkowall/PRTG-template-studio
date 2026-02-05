@@ -1,6 +1,8 @@
 # Changelog
 
 ## [1.1.0] - 2026-02-05
+### Fixed
+- Fixed theme persistence issue where the app might reset to Dark Mode on reload. Added script to prevent Flash of Unstyled Content (FOUC).
 ### Added
 - Helper scripts `run.ps1` and `run.sh` to automatically manage venv and run the app.
 - Visual badges in the file list to distinguish "Custom" (subdirectory) vs "Default" (root) templates.

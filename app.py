@@ -124,14 +124,14 @@ def git_get_version(type_key, filename, commit_hash):
         return None
     path = DIRECTORIES[type_key]['path']
     try:
-        # git show <hash>:<filename>
-        # Note: on Windows, filename path separators might need to be forward slashes for git?
-        # git usually handles forward slashes well.
+        # Standardize on forward slashes for git
+        filename = filename.replace('\\', '/')
         target = f"{commit_hash}:{filename}"
         cmd = ['git', 'show', target]
         result = subprocess.run(cmd, cwd=path, capture_output=True, text=True, check=True)
         return result.stdout
-    except subprocess.CalledProcessError:
+    except subprocess.CalledProcessError as e:
+        print(f"Git Version Error: {e}", file=sys.stderr)
         return None
 
 def git_get_diff(type_key, filename, commit_hash):
@@ -139,11 +139,14 @@ def git_get_diff(type_key, filename, commit_hash):
         return None
     path = DIRECTORIES[type_key]['path']
     try:
+        # Standardize on forward slashes for git
+        filename = filename.replace('\\', '/')
         # git show --format= -p <hash> -- <filename>
         cmd = ['git', 'show', '--format=', '-p', commit_hash, '--', filename]
         result = subprocess.run(cmd, cwd=path, capture_output=True, text=True, check=True)
         return result.stdout
-    except subprocess.CalledProcessError:
+    except subprocess.CalledProcessError as e:
+        print(f"Git Diff Error: {e}", file=sys.stderr)
         return None
 
 # --- Flask App ---

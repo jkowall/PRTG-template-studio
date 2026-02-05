@@ -102,7 +102,8 @@ def git_history(type_key, filename):
         # Format: Hash|Author|Date|Message
         # %H: Commit hash, %an: Author name, %ad: Author date (iso-strict), %s: Subject
         cmd = ['git', 'log', '--pretty=format:%H|%an|%ad|%s', '--date=iso-strict', '-n', '20', filename]
-        result = subprocess.run(cmd, cwd=path, capture_output=True, text=True, check=True)
+        # Use errors='replace' to handle potential non-utf8 commit messages
+        result = subprocess.run(cmd, cwd=path, capture_output=True, text=True, check=True, encoding='utf-8', errors='replace')
         
         history = []
         if result.stdout:
@@ -116,8 +117,9 @@ def git_history(type_key, filename):
                         'message': parts[3]
                     })
         return history
-    except subprocess.CalledProcessError:
-        return [] # Return empty if no history or error
+    except Exception as e:
+        print(f"Git History Error: {e}", file=sys.stderr)
+        return []
 
 def git_get_version(type_key, filename, commit_hash):
     if type_key not in DIRECTORIES:
@@ -127,10 +129,11 @@ def git_get_version(type_key, filename, commit_hash):
         # Standardize on forward slashes for git
         filename = filename.replace('\\', '/')
         target = f"{commit_hash}:{filename}"
+        target = f"{commit_hash}:{filename}"
         cmd = ['git', 'show', target]
-        result = subprocess.run(cmd, cwd=path, capture_output=True, text=True, check=True)
+        result = subprocess.run(cmd, cwd=path, capture_output=True, text=True, check=True, encoding='utf-8', errors='replace')
         return result.stdout
-    except subprocess.CalledProcessError as e:
+    except Exception as e:
         print(f"Git Version Error: {e}", file=sys.stderr)
         return None
 
@@ -142,11 +145,16 @@ def git_get_diff(type_key, filename, commit_hash):
         # Standardize on forward slashes for git
         filename = filename.replace('\\', '/')
         # git show --format= -p <hash> -- <filename>
+        # git show --format= -p <hash> -- <filename>
         cmd = ['git', 'show', '--format=', '-p', commit_hash, '--', filename]
-        result = subprocess.run(cmd, cwd=path, capture_output=True, text=True, check=True)
+        result = subprocess.run(cmd, cwd=path, capture_output=True, text=True, check=True, encoding='utf-8', errors='replace')
         return result.stdout
     except subprocess.CalledProcessError as e:
         print(f"Git Diff Error: {e}", file=sys.stderr)
+        print(f"Git Stderr: {e.stderr}", file=sys.stderr)
+        return None
+    except Exception as e:
+        print(f"Git Diff Error (General): {e}", file=sys.stderr)
         return None
 
 # --- Flask App ---

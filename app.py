@@ -87,7 +87,8 @@ def git_commit(type_key, filename, message):
     path = DIRECTORIES[type_key]['path']
     try:
         subprocess.run(['git', 'add', filename], cwd=path, check=True)
-        subprocess.run(['git', 'commit', '-S', '-m', message], cwd=path, check=True)
+        # Removed -S (GPG init) since not all environments have GPG config
+        subprocess.run(['git', 'commit', '-m', message], cwd=path, check=True)
         return True, "Saved and committed."
     except subprocess.CalledProcessError as e:
         return False, f"Git error: {e}"

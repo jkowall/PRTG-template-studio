@@ -413,6 +413,14 @@
                             </div>
                             <div class="flex items-center gap-4">
                                 <span class="text-xs text-zinc-500">{status}</span>
+                                {selectedFile && (
+                                    <button
+                                        onClick={loadHistory}
+                                        class="px-3 py-1.5 rounded text-xs font-semibold bg-zinc-200 hover:bg-zinc-300 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-600 dark:text-zinc-400 transition-colors"
+                                    >
+                                        History
+                                    </button>
+                                )}
                                 <button
                                     onClick={saveTemplate}
                                     disabled={!isDirty || loading}

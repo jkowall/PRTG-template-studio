@@ -122,9 +122,21 @@ def list_templates():
 
     files = []
     if os.path.exists(path):
-        for f in os.listdir(path):
-            if f.lower().endswith(exts) and os.path.isfile(os.path.join(path, f)):
-                files.append(f)
+        # Walk recursively to find files, including those in 'custom' subfolder
+        for root, dirs, filenames in os.walk(path):
+            # Skip .git directory
+            if '.git' in dirs:
+                dirs.remove('.git')
+            
+            for f in filenames:
+                if f.lower().endswith(exts):
+                    # Store relative path from the base directory
+                    full_path = os.path.join(root, f)
+                    rel_path = os.path.relpath(full_path, path)
+                    files.append(rel_path)
+    
+    # Sort files for better UX
+    files.sort()
     return jsonify(files)
 
 @app.route('/api/template/<filename>', methods=['GET'])

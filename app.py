@@ -117,7 +117,35 @@ def git_history(type_key, filename):
                     })
         return history
     except subprocess.CalledProcessError:
+    except subprocess.CalledProcessError:
         return [] # Return empty if no history or error
+
+def git_get_version(type_key, filename, commit_hash):
+    if type_key not in DIRECTORIES:
+        return None
+    path = DIRECTORIES[type_key]['path']
+    try:
+        # git show <hash>:<filename>
+        # Note: on Windows, filename path separators might need to be forward slashes for git?
+        # git usually handles forward slashes well.
+        target = f"{commit_hash}:{filename}"
+        cmd = ['git', 'show', target]
+        result = subprocess.run(cmd, cwd=path, capture_output=True, text=True, check=True)
+        return result.stdout
+    except subprocess.CalledProcessError:
+        return None
+
+def git_get_diff(type_key, filename, commit_hash):
+    if type_key not in DIRECTORIES:
+        return None
+    path = DIRECTORIES[type_key]['path']
+    try:
+        # git show --format= -p <hash> -- <filename>
+        cmd = ['git', 'show', '--format=', '-p', commit_hash, '--', filename]
+        result = subprocess.run(cmd, cwd=path, capture_output=True, text=True, check=True)
+        return result.stdout
+    except subprocess.CalledProcessError:
+        return None
 
 # --- Flask App ---
 app = Flask(__name__)
@@ -245,7 +273,40 @@ def get_template_history(filename):
         return jsonify({"error": "Invalid filename"}), 400
         
     history = git_history(type_key, filename)
+    history = git_history(type_key, filename)
     return jsonify(history)
+
+@app.route('/api/template/<path:filename>/version/<commit_hash>', methods=['GET'])
+@auth.login_required
+def get_template_version(filename, commit_hash):
+    type_key = request.args.get('type', 'device')
+    if type_key not in DIRECTORIES:
+        return jsonify({"error": "Invalid type"}), 400
+
+    if '..' in filename or filename.startswith('/'):
+        return jsonify({"error": "Invalid filename"}), 400
+
+    content = git_get_version(type_key, filename, commit_hash)
+    if content is None:
+        return jsonify({"error": "Version not found or git error"}), 404
+        
+    return jsonify({"content": content})
+
+@app.route('/api/template/<path:filename>/diff/<commit_hash>', methods=['GET'])
+@auth.login_required
+def get_template_diff(filename, commit_hash):
+    type_key = request.args.get('type', 'device')
+    if type_key not in DIRECTORIES:
+        return jsonify({"error": "Invalid type"}), 400
+
+    if '..' in filename or filename.startswith('/'):
+        return jsonify({"error": "Invalid filename"}), 400
+
+    diff = git_get_diff(type_key, filename, commit_hash)
+    if diff is None:
+        return jsonify({"error": "Diff not found or git error"}), 404
+        
+    return jsonify({"diff": diff})
 
 # --- Main ---
 def main():

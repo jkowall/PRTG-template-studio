@@ -155,12 +155,85 @@
 
 
 
-        const HistoryModal = ({ isOpen, onClose, history, filename }) => {
+            );
+        };
+
+        const DiffModal = ({ isOpen, onClose, diff }) => {
             if (!isOpen) return null;
+            return (
+                <div class="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+                    <div class="bg-white dark:bg-zinc-900 rounded-lg shadow-xl w-full max-w-4xl border border-zinc-200 dark:border-zinc-800 flex flex-col max-h-[90vh]">
+                        <div class="flex items-center justify-between p-4 border-b border-zinc-200 dark:border-zinc-800">
+                            <h3 class="font-bold text-lg text-zinc-900 dark:text-zinc-100">Commit Diff</h3>
+                            <button onClick={onClose} class="text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300">✕</button>
+                        </div>
+                        <div class="overflow-auto p-4 bg-zinc-50 dark:bg-zinc-950 flex-1">
+                            <pre class="font-mono text-xs whitespace-pre-wrap text-zinc-700 dark:text-zinc-300">
+                                {diff.split('\n').map((line, i) => {
+                                    let color = "text-zinc-600 dark:text-zinc-400";
+                                    let bg = "";
+                                    if (line.startsWith('+') && !line.startsWith('+++')) {
+                                        color = "text-green-700 dark:text-green-400";
+                                        bg = "bg-green-50 dark:bg-green-900/20";
+                                    } else if (line.startsWith('-') && !line.startsWith('---')) {
+                                        color = "text-red-700 dark:text-red-400";
+                                        bg = "bg-red-50 dark:bg-red-900/20";
+                                    } else if (line.startsWith('@@')) {
+                                        color = "text-blue-600 dark:text-blue-400";
+                                    }
+                                    return <div key={i} class={`${color} ${bg} px-1`}>{line}</div>
+                                })}
+                            </pre>
+                        </div>
+                        <div class="p-4 border-t border-zinc-200 dark:border-zinc-800 flex justify-end">
+                            <button onClick={onClose} class="px-4 py-2 bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 rounded text-xs font-semibold">Close</button>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const HistoryModal = ({ isOpen, onClose, history, filename, activeType, onRestore }) => {
+            if (!isOpen) return null;
+
+            const [diff, setDiff] = useState(null);
+            const [showDiff, setShowDiff] = useState(false);
+            const [loadingHash, setLoadingHash] = useState(null);
+
+            const viewDiff = async (hash) => {
+                setLoadingHash(hash);
+                try {
+                    const res = await fetch(`/api/template/${filename}/diff/${hash}?type=${activeType}`);
+                    if (res.ok) {
+                        const data = await res.json();
+                        setDiff(data.diff);
+                        setShowDiff(true);
+                    }
+                } catch (e) {
+                    console.error("Failed to load diff", e);
+                } finally {
+                    setLoadingHash(null);
+                }
+            };
+
+            const handleRestore = async (hash) => {
+                if (!confirm(`Are you sure you want to restore content from commit ${hash.substring(0, 7)}? Unsaved changes will be lost.`)) return;
+
+                try {
+                    const res = await fetch(`/api/template/${filename}/version/${hash}?type=${activeType}`);
+                    if (res.ok) {
+                        const data = await res.json();
+                        onRestore(data.content);
+                        onClose();
+                    }
+                } catch (e) {
+                    console.error("Failed to restore version", e);
+                }
+            };
 
             return (
                 <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-                    <div class="bg-white dark:bg-zinc-900 rounded-lg shadow-xl w-full max-w-2xl border border-zinc-200 dark:border-zinc-800 flex flex-col max-h-[80vh]">
+                    <div class="bg-white dark:bg-zinc-900 rounded-lg shadow-xl w-full max-w-3xl border border-zinc-200 dark:border-zinc-800 flex flex-col max-h-[80vh]">
                         <div class="flex items-center justify-between p-4 border-b border-zinc-200 dark:border-zinc-800">
                             <h3 class="font-bold text-lg text-zinc-900 dark:text-zinc-100">History: {filename}</h3>
                             <button onClick={onClose} class="text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300">
@@ -174,26 +247,36 @@
                                 <table class="w-full text-left text-xs">
                                     <thead class="bg-zinc-50 dark:bg-zinc-950/50 text-zinc-500 font-semibold uppercase sticky top-0">
                                         <tr>
-                                            <th class="px-4 py-2 border-b border-zinc-100 dark:border-zinc-800">Date</th>
-                                            <th class="px-4 py-2 border-b border-zinc-100 dark:border-zinc-800">Author</th>
+                                            <th class="px-4 py-2 border-b border-zinc-100 dark:border-zinc-800">Date/Author</th>
                                             <th class="px-4 py-2 border-b border-zinc-100 dark:border-zinc-800">Message</th>
-                                            <th class="px-4 py-2 border-b border-zinc-100 dark:border-zinc-800">Commit</th>
+                                            <th class="px-4 py-2 border-b border-zinc-100 dark:border-zinc-800 text-right">Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody class="divide-y divide-zinc-100 dark:divide-zinc-800">
                                         {history.map((commit) => (
                                             <tr key={commit.hash} class="hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors">
-                                                <td class="px-4 py-3 text-zinc-600 dark:text-zinc-400 whitespace-nowrap">
-                                                    {new Date(commit.date).toLocaleString()}
-                                                </td>
-                                                <td class="px-4 py-3 text-zinc-800 dark:text-zinc-300 font-medium">
-                                                    {commit.author}
+                                                <td class="px-4 py-3 whitespace-nowrap">
+                                                    <div class="font-medium text-zinc-800 dark:text-zinc-300">{new Date(commit.date).toLocaleString()}</div>
+                                                    <div class="text-zinc-500 dark:text-zinc-500 text-[10px]">{commit.author}</div>
                                                 </td>
                                                 <td class="px-4 py-3 text-zinc-600 dark:text-zinc-400">
-                                                    {commit.message}
+                                                    <div class="mb-1">{commit.message}</div>
+                                                    <div class="font-mono text-zinc-400 text-[10px]">{commit.hash.substring(0, 7)}</div>
                                                 </td>
-                                                <td class="px-4 py-3 font-mono text-zinc-400 text-[10px]">
-                                                    {commit.hash.substring(0, 7)}
+                                                <td class="px-4 py-3 text-right whitespace-nowrap space-x-2">
+                                                    <button
+                                                        onClick={() => viewDiff(commit.hash)}
+                                                        disabled={loadingHash === commit.hash}
+                                                        class="px-2 py-1 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 rounded text-zinc-600 dark:text-zinc-400 text-[10px] font-bold uppercase transition-colors"
+                                                    >
+                                                        {loadingHash === commit.hash ? '...' : 'Diff'}
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleRestore(commit.hash)}
+                                                        class="px-2 py-1 bg-amber-50 dark:bg-amber-900/20 hover:bg-amber-100 dark:hover:bg-amber-900/40 text-amber-700 dark:text-amber-500 rounded text-[10px] font-bold uppercase transition-colors"
+                                                    >
+                                                        Restore
+                                                    </button>
                                                 </td>
                                             </tr>
                                         ))}
@@ -207,6 +290,8 @@
                             </button>
                         </div>
                     </div>
+
+                    <DiffModal isOpen={showDiff} onClose={() => setShowDiff(false)} diff={diff} />
                 </div>
             );
         };
@@ -315,6 +400,11 @@
                 } catch (e) {
                     console.error("Failed to load history", e);
                 }
+            };
+
+            const handleRestore = (newContent) => {
+                setContent(newContent);
+                setStatus("Restored from history (Unsaved!)");
             };
 
             const isDirty = content !== initialContent;
@@ -463,6 +553,8 @@
                         onClose={() => setShowHistory(false)}
                         history={history}
                         filename={selectedFile}
+                        activeType={activeType}
+                        onRestore={handleRestore}
                     />
                 </div>
             );

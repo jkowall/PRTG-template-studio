@@ -6,6 +6,9 @@
 - Fixed syntax error in `index.html` preventing page load.
 - Fixed theme persistence issue where the app might reset to Dark Mode on reload. Added script to prevent Flash of Unstyled Content (FOUC).
 ### Added
+- **Git Advanced Features**:
+    - **View Diff**: Visualize changes (diffs) for any commit in the History view.
+    - **Restore Version**: Revert the editor content to a previous version (requires saving to commit).
 - **Git History**: View the version history (commits) of a file directly in the UI. Stats include Date, Author, and Message.
 - **Sidebar Filtering**: Added buttons to filter the file list by "All", "Default" (root), and "Custom" (subdirectories).
 - **Visual Improvements**: 
